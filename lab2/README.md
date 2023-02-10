@@ -3,7 +3,7 @@ Deploy your Django app on apache server
 
 
 ## app repo 
-[django_project]('https://github.com/ahmedsaadx/django-project')
+[django_project](https://github.com/ahmedsaadx/django-project)
 
 ## Prerequisites
 You should also have Ansible installed on your system.
