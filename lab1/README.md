@@ -6,9 +6,9 @@ create 2 machines:
 
 ## result
 1. webserver 1
-![image](/pics/Screenshot%20from%202023-02-10%2015-44-00.png)
+![image](pics/pic1.png)
 2. webserver 2
-![image](/pics/Screenshot%20from%202023-02-10%2015-44-08.png)
+![image](pics/pic2.png)
 
 ## tree
 ```
