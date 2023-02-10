@@ -1,0 +1,2 @@
+[web]
+django_server ansible_host=35.153.19.107  ansible_connection=ssh ansible_port=22 ansible_user=ubuntu

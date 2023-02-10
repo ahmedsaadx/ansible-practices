@@ -1,0 +1,54 @@
+- name: deploy django app to aws
+  hosts: web
+  become: true
+  tasks:
+
+    # - name: git checkout
+    #   ansible.builtin.git:
+    #     repo: https://github.com/ahmedsaadx/django-project
+    #     dest: /var/www/html
+    - name: update packages and install required packages
+      apt:
+        update_cache: yes
+        pkg:
+          - apache2
+          - python3
+          - python3-pip
+          - libapache2-mod-wsgi-py3
+        state: present
+      
+
+    
+    - name: synchronize files from local to server
+      synchronize:
+        src: project/
+        dest: /var/www/html/
+
+
+    - name: copy configurefile-1 to server
+      copy:
+        src: apache2.conf
+        dest: /etc/apache2/apache2.conf
+        owner: root
+        group: root
+        mode: '0644'
+    - name: copy configurefile-2 to server
+      copy:
+        src: django.conf
+        dest: /etc/apache2/sites-available/
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: script
+      script: ./script.sh  
+    
+    
+    - name: restart apache2 server
+      ansible.builtin.systemd:
+        name: apache2
+        state: restarted  
+        
+
+    
+                  
