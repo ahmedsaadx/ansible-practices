@@ -1,0 +1,10 @@
+[public]
+nginx1     ansible_host=184.73.50.185  ansible_port=22 ansible_user=ubuntu   
+nginx2     ansible_host=52.91.13.84  ansible_port=22 ansible_user=ubuntu      
+[private]
+nexus       ansible_host=10.0.2.228
+sonarqube   ansible_host=10.0.3.221 
+[private:vars]
+ansible_port = 22
+ansible_user = ubuntu 
+ansible_ssh_common_args="-o ProxyCommand=\"ssh -q ubuntu@184.73.50.185  -o IdentityFile=./ansible-1.pem -o Port=22 -W %h:%p\""

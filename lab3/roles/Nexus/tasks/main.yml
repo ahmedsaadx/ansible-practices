@@ -1,0 +1,117 @@
+# tasks file for Nexus
+- name: update packages and install  openjdk-8-jre-headless , wget
+  apt:
+    update_cache: yes
+    pkg:
+    - openjdk-8-jre-headless
+    - wget
+  when: inventory_hostname == groups['private'][0]
+
+
+- name : download nexus.tar 
+  get_url:
+    url: "{{ nexus_url }}"  
+    dest: /opt
+  when: inventory_hostname == groups['private'][0]
+
+- name: Create the target directory
+  file:
+    path: "{{ nexus_dir }}"
+    state: directory  
+  when: inventory_hostname == groups['private'][0] 
+
+- name: Extract nexus.tar into nexus
+  unarchive:
+    src: /opt/nexus-3.47.1-01-unix.tar.gz
+    dest:  "{{ nexus_dir }}"
+    remote_src: yes
+  when: inventory_hostname == groups['private'][0]
+
+- name: Create the nexus group
+  group:
+    name: "{{ nexus_group }}"
+  when: inventory_hostname == groups['private'][0]
+
+- name: add user nexus 
+  user:
+    name: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+  when: inventory_hostname == groups['private'][0]
+
+
+
+- name: Give sudo access to nexus user
+  blockinfile:
+    path: /etc/sudoers
+    insertafter: 'root    ALL=(ALL)       ALL'
+    block: |
+      # Gives sudo access to the nexus group
+        %nexus       ALL=(ALL)       NOPASSWD: ALL
+  when: inventory_hostname == groups['private'][0]
+
+- name: change permission to nexus
+  command: chown -R nexus:nexus "{{ nexus_dir }}"
+  when: inventory_hostname == groups['private'][0]
+
+
+- name: run nexus as service at boot time
+  lineinfile:
+    path: /opt/nexus/nexus-3.47.1-01/bin/nexus.rc 
+    regex: '^#run_as_user=""'
+    line: run_as_user="nexus"
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    mode: '0644' 
+  when: inventory_hostname == groups['private'][0] 
+
+- name: Replace path in file
+  replace:
+    path: /opt/nexus/nexus-3.47.1-01/bin/nexus.vmoptions 
+    regexp: '../sonatype-work'
+    replace: './sonatype-work'    
+  when: inventory_hostname == groups['private'][0]
+
+- name: create nexus service file 
+  copy:
+    src: nexus.service
+    dest: /etc/systemd/system/nexus.service
+    owner: root
+    group: root
+    mode: '0777'  
+  when: inventory_hostname == groups['private'][0]
+  notify: 
+  - restart nexus service
+  - start nexus service 
+
+- name : restart nexus service
+  systemd:
+    name: nexus
+    state: restarted
+  when: inventory_hostname == groups['private'][0]    
+
+- name: start nexus service
+  systemd:
+    name: nexus
+    state: started
+    enabled: true
+  register: myserviceDetails
+  until: myserviceDetails.status.ActiveState == "active"
+  retries: 15
+  delay: 20  
+  when: inventory_hostname == groups['private'][0] 
+
+- name: notify Slack that the job is Successful
+  community.general.slack:
+    token: "{{ token }}"
+    msg: |
+          ### StatusUpdate ###
+          – ------------------------------------
+          ``
+          `Server`: {{ nexus_user }}
+          `Status`: Ansible File Watcher Job Successful.
+          – ------------------------------------
+    channel: 'ansible'
+    color: good
+    link_names: 0
+    parse: 'none'
+  when: inventory_hostname == groups['private'][0]   

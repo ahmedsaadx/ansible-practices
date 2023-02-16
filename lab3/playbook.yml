@@ -1,0 +1,12 @@
+- name: install Nexus and sonarqube
+  hosts: private
+  become: true
+  roles:
+    - role: './Nexus'
+    - role: './sonarqube-role'
+
+- name: install nginx proxy
+  hosts: public
+  become: true
+  roles:
+    - role: './Nginx'

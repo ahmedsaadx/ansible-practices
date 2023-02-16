@@ -1,0 +1,17 @@
+---
+# handlers file for Nexus
+- name: start nexus service
+  systemd:
+    name: nexus
+    state: started
+    enabled: true
+
+- name : restart nexus service
+  systemd:
+    name: nexus
+    state: restarted
+
+- name : stop nexus service
+  systemd:
+    name: nexus
+    state: stopped

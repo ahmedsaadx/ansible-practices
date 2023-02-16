@@ -1,0 +1,42 @@
+---
+# tasks file for Nginx
+- name: update packages and install Nginx
+  apt:
+    update_cache: yes
+    name: nginx
+  notify: start nginx service 
+
+- name: copy nginx configruation
+  copy:
+    src: default
+    dest: /etc/nginx/sites-enabled/default
+    owner: root 
+    group: root 
+    mode: "0777"
+  notify: restart nginx service 
+
+- name: start nginx service 
+  systemd:
+    name: nginx 
+    state: started
+    enabled: yes 
+  register: myserviceDetails
+  until: myserviceDetails.status.ActiveState == "active"
+  retries: 15
+  delay: 20  
+
+- name: notify Slack that the job is Successful
+  community.general.slack:
+    token: "{{ token }}"
+    msg: |
+          ### StatusUpdate ###
+          – ------------------------------------
+          ``
+          `Server`: Nginx server is up 
+          `Status`: Ansible File Watcher Job Successful.
+          – ------------------------------------
+    channel: 'ansible'
+    color: good
+    link_names: 0
+    parse: 'none'  
+

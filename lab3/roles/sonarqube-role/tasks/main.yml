@@ -1,0 +1,180 @@
+- name: Update apt-get repo and cache
+  apt: 
+      update_cache: yes 
+      force_apt_get: yes 
+      cache_valid_time: 3600
+  when: inventory_hostname == groups['private'][1]  
+
+- name: install pip3 , php , python3 , openjdk-11 , unzip
+  apt:
+    pkg: 
+    - python3-pip
+    - php
+    - python3
+    - openjdk-11-jdk
+    - unzip
+    state: present
+  when: inventory_hostname == groups['private'][1]
+
+
+  
+- name: install lxml
+  pip:
+    name: lxml 
+  when: inventory_hostname == groups['private'][1]
+
+
+# Download the sonarqube packages from sonar community 
+- name: download the sonarqube community
+  unarchive:
+    src: "{{ sonarquebe_url }}"
+    dest: "{{ sonarquebe_dir }}"
+    remote_src: yes
+  when: inventory_hostname == groups['private'][1]
+# copy sonarqube properties file which contains postgresql db details to remote server
+
+- name: copy sonarqube properties file to remote system
+  copy:
+      src: sonar.properties
+      dest: "{{ sonarquebe_pro_location }}"
+      mode: 0755
+  when: inventory_hostname == groups['private'][1]
+
+- name: Change ownership for sonarquebe
+  file:
+    path:  "{{ dir_location }}"
+    owner: "{{ sonarquebe_user }}"
+    group: "{{ sonarquebe_group }}"
+    mode: "0766"
+    recurse: yes
+    state: directory
+  when: inventory_hostname == groups['private'][1]
+# copy sonarqube service 
+
+- name: Copy sonarqube service from local to remote
+  copy:
+      src: sonar.service
+      dest: /etc/systemd/system/
+      mode: 0755
+
+  when: inventory_hostname == groups['private'][1] 
+# Install posgtresql on remote server
+
+- name:  install ansible postgresql dependancy packages
+  package:
+    pkg: python3-psycopg2
+    state: present
+  when: inventory_hostname == groups['private'][1]  
+
+
+- name: add the virtual max memory
+  lineinfile:
+    path: /etc/sysctl.conf
+    state: present
+    line: "{{ item }}"
+  with_items:
+    - 'vm.max_map_count=262144'
+    - 'fs.file-max=65536'
+    - 'ulimit -n 65536'
+    - 'ulimit -u 4096'  
+  when: inventory_hostname == groups['private'][1]  
+
+- name: load sysctl
+  command: sysctl -w vm.max_map_count=262144
+  when: inventory_hostname == groups['private'][1]
+  
+- name: Ensure bash, OpenSSl, and libssl are the latest versions
+  apt:
+    name: "{{ item }}"
+    update_cache: true 
+    state: latest
+  with_items: 
+      - bash
+      - openssl
+      - libssl-dev
+      - libssl-doc
+  when: inventory_hostname == groups['private'][1]     
+    
+- name: Install PostgreSQL
+  apt: 
+      name: "{{ item }}"
+      state: present
+      update_cache: true 
+  with_items:
+        - postgresql
+        - postgresql-contrib
+        - libpq-dev
+        - acl
+  when: inventory_hostname == groups['private'][1]        
+  
+- name: start postgres
+  service:
+    name: postgresql 
+    state: started
+    enabled: true 
+  when: inventory_hostname == groups['private'][1]  
+
+- name: Ensure database is created
+  become_user: postgres 
+  postgresql_db: 
+      name: "{{ db_name }}"
+      state: present
+  when: inventory_hostname == groups['private'][1]      
+  
+
+- name: Ensure user has access to the database
+  become_user: postgres
+  postgresql_user: 
+    db: "{{ db_name }}"
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    priv: ALL
+    state: present
+    encrypted: yes
+  when: inventory_hostname == groups['private'][1]   
+  
+    
+
+- name: Ensure user does not have unnecessary privileges
+  become_user: postgres
+  postgresql_user: 
+      name: "{{ db_user }}"
+      role_attr_flags: NOSUPERUSER,NOCREATEDB
+      state: present
+  when: inventory_hostname == groups['private'][1]
+  notify: Start and enable sonar service
+
+- name: Start and enable sonar service
+  systemd:
+      name: sonar.service
+      state: restarted
+      enabled: true
+  when: inventory_hostname == groups['private'][1]     
+
+- name: Start and enable sonar service
+  systemd:
+      name: sonar.service
+      state: started
+      enabled: true  
+  when: inventory_hostname == groups['private'][1]
+  register: myserviceDetails
+  until: myserviceDetails.status.ActiveState == "active"
+  retries: 15
+  delay: 20  
+
+- name: notify Slack that the job is Successful
+  community.general.slack:
+    token: "{{ token }}"
+    msg: |
+          ### StatusUpdate ###
+          – ------------------------------------
+          ``
+          `Server`: {{ db_user }} server is up 
+          `Status`: Ansible File Watcher Job Successful.
+          – ------------------------------------
+    channel: 'ansible'
+    color: good
+    link_names: 0
+    parse: 'none'  
+  when: inventory_hostname == groups['private'][1]
+  
