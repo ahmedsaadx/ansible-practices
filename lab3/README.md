@@ -1,6 +1,5 @@
 ## Infrastructure as Code (IaC) using Terraform and ansible integration with slack
-1.Dynamically create an inventory: Use the Terraform state file to generate a dynamic     
-  inventory file that can be used by Ansible. This eliminates the need to manually create and manage inventory files, making the process more efficient and less error-prone.
+1.Dynamically create an inventory: Use the Terraform state file to generate a dynamic      inventory file that can be used by Ansible. This eliminates the need to manually create and manage inventory files, making the process more efficient and less error-prone.
 
 2.Integrate with Slack: Set up Slack notifications to get notified of any infrastructure    
   successful installation with ansible
@@ -15,13 +14,25 @@
 3. slack account
 
 
+
+
 ## result
-![image](pics/nexus.png)
-![image](pics/nexus1.png)
-![image](pics/sonarqube.png)
-![image](pics/slack1.png)
-![image](pics/slack2.png)
-![image](pics/slack3.png)
+- nexus from public alb
+    ![image](pics/nexus.png)
+- nexus from public alb 2
+    ![image](pics/nexus1.png)
+- sonar from public alb 
+    ![image](pics/sonarqube.png)
+- slack 1
+    ![image](pics/slack1.png)
+- slack 2
+    ![image](pics/slack2.png)
+- slack 3
+    ![image](pics/slack3.png)
+- curl nexus from bastion
+    ![image](pics/cul_nexus_from_bastion.png)
+- curl sonar from bastion
+    ![image](pics/curl_sonar_from_bastion.png)
 
 
 ## tree
