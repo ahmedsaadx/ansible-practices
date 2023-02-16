@@ -13,6 +13,22 @@
 2. ansible 
 3. slack account
 
+## roles 
+The following roles are available in this repository:
+- Nexus Role : install and configures Nexus server on ubuntu hosts
+  
+- SonarQube Role: install and configures SonarQube server on ubuntu hosts , also copies a custom configuration files to host 
+   
+- Nginx Role : install and configures Nginx web server , also copies custom proxy config file to hosts
+
+## Usage
+```
+terraform init
+terraform apply
+source scripts/bash.sh #>>>> bash shell (run per session)
+source scripts/fish.sh # >>>> fish shell (run per session)
+ansible-playbook playbook.yaml -i inventory.txt
+```
 
 
 
@@ -33,7 +49,12 @@
     ![image](pics/cul_nexus_from_bastion.png)
 - curl sonar from bastion
     ![image](pics/curl_sonar_from_bastion.png)
-
+- nexus ec2 
+    ![image](pics/nexus_ec2.png)    
+- sonar ec2 
+    ![image](pics/sonar_ec2.png)
+- public ec2 
+    ![image](pics/pub_ec.png)    
 
 ## tree
 ```
