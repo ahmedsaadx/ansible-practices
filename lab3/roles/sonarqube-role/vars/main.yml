@@ -9,5 +9,5 @@ sonarquebe_pro_location: /home/ubuntu/sonarqube-9.1.0.47736/conf
 sonarquebe_user: ubuntu
 sonarquebe_group: ubuntu
 dir_location: /home/ubuntu/sonarqube-9.1.0.47736
-token: T04B5FF2PC6/B04QD52C1CH/kTmDtm7skRvljwIoLNALH99I
+
 
